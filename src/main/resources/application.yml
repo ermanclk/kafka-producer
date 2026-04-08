@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: kafka-producer
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Apicurio 3.x Avro serializer sınıf adı
+      value-serializer: io.apicurio.registry.serde.avro.AvroKafkaSerializer
+      acks: all
+      retries: 3
+      properties:
+        # Apicurio Registry 3.x → /apis/registry/v3
+        apicurio.registry.url: http://localhost:8080/apis/registry/v3
+        # Schema'yı topic adına göre register et
+        apicurio.registry.auto-register: "true"
+        apicurio.registry.find-latest: "true"
+
+server:
+  port: 8081   # consumer 8082'de çalışır, çakışmasın
+
+app:
+  kafka:
+    topic: user-events
+    topic-config:
+      partitions: 3
+      replicas: 1
+      retention-ms: 604800000  # 7 gün
+      cleanup-policy: delete
+      min-insync-replicas: 1   # En az 1 replica sync olmalı
+
+logging:
+  level:
+    com.example: DEBUG
+    io.apicurio: INFO
