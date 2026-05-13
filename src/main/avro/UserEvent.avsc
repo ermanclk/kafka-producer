@@ -3,13 +3,14 @@
   "name": "UserEvent",
   "namespace": "com.example.avro",
   "fields": [
-    { "name": "userId",    "type": "string" },
+    { "name": "userId", "type": "string" },
     { "name": "eventType", "type": {
-        "type": "enum",
-        "name": "EventType",
-        "symbols": ["LOGIN", "LOGOUT", "PAGE_VIEW", "PURCHASE", "ADD_TO_CART"]
+      "type": "enum",
+      "name": "EventType",
+      "namespace": "com.example.avro",
+      "symbols": ["LOGIN", "LOGOUT", "PAGE_VIEW", "PURCHASE", "ADD_TO_CART"]
     }},
     { "name": "timestamp", "type": "string" },
-    { "name": "metadata",  "type": { "type": "map", "values": "string" }, "default": {} }
+    { "name": "metadata", "type": { "type": "map", "values": "string" }, "default": {} }
   ]
 }

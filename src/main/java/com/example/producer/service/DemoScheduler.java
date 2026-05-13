@@ -37,7 +37,7 @@ public class DemoScheduler {
         Thread.sleep(200);
         producer.send("user-003", EventType.ADD_TO_CART, Map.of("item", "mouse", "qty", "2"));
         Thread.sleep(200);
-        producer.send("user-002", EventType.LOGOUT,      Map.of());
+        producer.send("user-002", EventType.LOGOUT,      Map.of("item", "mouse", "qty", "2"));
         log.info("=== Demo: startup events gönderildi ===");
     }
 
