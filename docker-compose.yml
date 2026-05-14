@@ -1,4 +1,31 @@
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
+      KC_PROXY: edge
+      KC_HEALTH_ENABLED: "true"
+      # H2 yerine PostgreSQL kullanmak daha sağlıklı ama H2 persist için:
+      KC_DB: dev-file          # <-- H2 file-based DB kullan (dev için)
+    ports:
+      - "8081:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data   # <-- ekle
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/health/ready" ]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     container_name: kafka
@@ -8,38 +35,34 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-
-
       KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-
 
   apicurio-registry:
     image: apicurio/apicurio-registry:3.2.1
     container_name: apicurio-registry
     ports:
-      - "8080:8080"
+      - "8080:9999"  # ← Dış port 8080, iç port 9999
     environment:
       APICURIO_REGISTRY_COMPATIBILITY_CONFLUENT: true
+      QUARKUS_HTTP_PORT: "9999"  # ← İç portu 9999 olarak ayarla
 
   apicurio-registry-ui:
     image: apicurio/apicurio-registry-ui:3.2.1
     container_name: apicurio-registry-ui
     ports:
-      - "8888:8080"
+      - "8888:9998"
     environment:
-      APICURIO_REGISTRY_URL: http://apicurio-registry:8080/apis/registry/v2
+      APICURIO_REGISTRY_URL: http://apicurio-registry:9999/apis/registry/v2
+      QUARKUS_HTTP_PORT: "9998"  # ← İç portu 9998 olarak ayarla
     depends_on:
       - apicurio-registry
 
@@ -48,14 +71,35 @@ services:
     container_name: kafka-ui
     ports:
       - "8090:8080"
+    restart: on-failure
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    # extra_hosts YOK — Docker network üzerinden keycloak:8080 direkt erişilir
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS:
-      # Apicurio registry compatibility endpoint
-      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://apicurio-registry:8080/apis/ccompat/v7
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
 
-      # BU SATIR KRİTİK
-      KAFKA_CLUSTERS_0_SCHEMAREGISTRYTYPE: APICURIO
-    depends_on:
-      - kafka
-      - apicurio-registry
+      AUTH_TYPE: OAUTH2
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_CLIENTID: kafka-ui
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_CLIENTSECRET: UDsqCeX5SKvLu7gV5VEn3h5iLFo47zXw
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_SCOPE: openid,profile,email
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_PROVIDER: keycloak-provider
+
+      # issuer keycloak:8080 dönüyor — bununla eşleşmeli
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_ISSUER_URI: http://keycloak:8088/realms/application_users
+
+
+      # authorization: tarayıcıdan gidecek → localhost:8081
+      AUTH_OAUTH2_PROVIDER_K EYCLOAK-PROVIDER_AUTHORIZATIONURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/auth
+
+      # token/jwks/userinfo: container içinden → keycloak:8080
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_TOKENURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/token
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_JWKSETURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/certs
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USERINFOURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/userinfo
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USERNAMEATTRIBUTE: preferred_username
+
+volumes:
+  keycloak_data:
