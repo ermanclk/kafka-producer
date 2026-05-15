@@ -89,16 +89,16 @@ services:
       AUTH_OAUTH2_CLIENT_KEYCLOAK_PROVIDER: keycloak-provider
 
       # issuer keycloak:8080 dönüyor — bununla eşleşmeli
-      AUTH_OAUTH2_CLIENT_KEYCLOAK_ISSUER_URI: http://keycloak:8088/realms/application_users
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/application_users
 
 
       # authorization: tarayıcıdan gidecek → localhost:8081
-      AUTH_OAUTH2_PROVIDER_K EYCLOAK-PROVIDER_AUTHORIZATIONURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/auth
+      AUTH_OAUTH2_PROVIDER_K EYCLOAK-PROVIDER_AUTHORIZATIONURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/auth
 
       # token/jwks/userinfo: container içinden → keycloak:8080
-      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_TOKENURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/token
-      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_JWKSETURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/certs
-      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USERINFOURI: http://keycloak:8088/realms/application_users/protocol/openid-connect/userinfo
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_TOKENURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/token
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_JWKSETURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/certs
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USERINFOURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/userinfo
       AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USERNAMEATTRIBUTE: preferred_username
 
 volumes:
