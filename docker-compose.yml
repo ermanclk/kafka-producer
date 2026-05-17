@@ -16,7 +16,7 @@ services:
       # H2 yerine PostgreSQL kullanmak daha sağlıklı ama H2 persist için:
       KC_DB: dev-file          # <-- H2 file-based DB kullan (dev için)
     ports:
-      - "8081:8080"
+      - "8088:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data   # <-- ekle
     healthcheck:
@@ -50,7 +50,7 @@ services:
     image: apicurio/apicurio-registry:3.2.1
     container_name: apicurio-registry
     ports:
-      - "8080:9999"  # ← Dış port 8080, iç port 9999
+      - "8087:9999"  # ← Dış port 8080, iç port 9999
     environment:
       APICURIO_REGISTRY_COMPATIBILITY_CONFLUENT: true
       QUARKUS_HTTP_PORT: "9999"  # ← İç portu 9999 olarak ayarla
@@ -74,32 +74,32 @@ services:
     restart: on-failure
     depends_on:
       keycloak:
-        condition: service_healthy
+        condition: service_started
       kafka:
         condition: service_started
     # extra_hosts YOK — Docker network üzerinden keycloak:8080 direkt erişilir
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_BOOTSTRAP-SERVERS: kafka:29092
 
       AUTH_TYPE: OAUTH2
-      AUTH_OAUTH2_CLIENT_KEYCLOAK_CLIENTID: kafka-ui
-      AUTH_OAUTH2_CLIENT_KEYCLOAK_CLIENTSECRET: UDsqCeX5SKvLu7gV5VEn3h5iLFo47zXw
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_CLIENT-ID: kafka-ui
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_CLIENT-SECRET: UDsqCeX5SKvLu7gV5VEn3h5iLFo47zXw
       AUTH_OAUTH2_CLIENT_KEYCLOAK_SCOPE: openid,profile,email
       AUTH_OAUTH2_CLIENT_KEYCLOAK_PROVIDER: keycloak-provider
 
       # issuer keycloak:8080 dönüyor — bununla eşleşmeli
-      AUTH_OAUTH2_CLIENT_KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/application_users
+      AUTH_OAUTH2_CLIENT_KEYCLOAK_ISSUER-URI: http://keycloak:8080/realms/application_users
 
 
       # authorization: tarayıcıdan gidecek → localhost:8081
-      AUTH_OAUTH2_PROVIDER_K EYCLOAK-PROVIDER_AUTHORIZATIONURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/auth
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK_PROVIDER_AUTHORIZATION-URI: http://localhost:8088/realms/application_users/protocol/openid-connect/auth
 
       # token/jwks/userinfo: container içinden → keycloak:8080
-      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_TOKENURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/token
-      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_JWKSETURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/certs
-      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USERINFOURI: http://keycloak:8080/realms/application_users/protocol/openid-connect/userinfo
-      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USERNAMEATTRIBUTE: preferred_username
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_TOKEN-URI: http://keycloak:8080/realms/application_users/protocol/openid-connect/token
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_JWK-SET-URI: http://keycloak:8080/realms/application_users/protocol/openid-connect/certs
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USER-INFO-URI: http://keycloak:8080/realms/application_users/protocol/openid-connect/userinfo
+      AUTH_OAUTH2_PROVIDER_KEYCLOAK-PROVIDER_USER-NAME-ATTRIBUTE: preferred_username
 
 volumes:
   keycloak_data:
