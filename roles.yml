@@ -17,7 +17,7 @@ auth:
         provider: keycloak-provider
         custom-params:
           type: oauth
-          roles-field: roles
+          roles-field: resource_access.kafka-ui.roles
     provider:
       keycloak-provider:
         authorization-uri: http://keycloak:8080/realms/application_users/protocol/openid-connect/auth
@@ -29,7 +29,7 @@ rbac:
   default-role:
     permissions:
       - resource: clusterconfig
-        actions: [ "view" ]
+        actions: [ view ]
 
       - resource: topic
         value: ".*"
@@ -37,8 +37,6 @@ rbac:
           - view
           - messages_read
           - analysis_view
-          - messages_produce
-          - messages_delete
       - resource: consumer
         value: ".*"
         actions: [ view ]
@@ -55,7 +53,7 @@ rbac:
         actions: [ view ]
 
   roles:
-    - name: "admins"
+    - name: "kafka-admin"
       clusters:
         - local
         - dev
@@ -64,19 +62,27 @@ rbac:
       subjects:
         - provider: oauth
           type: role
-          value: "kafka-admin"
-          regex: true
+          value: "admin"
+          regex: false
       permissions:
         - resource: applicationconfig
           actions: all
 
         - resource: clusterconfig
-          actions: all
+          actions: [ "view" ]
 
         - resource: topic
           value: ".*"
-          actions: all
-
+          actions:
+            - VIEW
+            - CREATE
+            - EDIT
+            - DELETE
+            - MESSAGES_READ
+            - MESSAGES_PRODUCE
+            - MESSAGES_DELETE
+            - ANALYSIS_RUN
+            - ANALYSIS_VIEW
         - resource: consumer
           value: ".*"
           actions: all
