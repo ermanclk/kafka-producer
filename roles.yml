@@ -17,7 +17,7 @@ auth:
         provider: keycloak-provider
         custom-params:
           type: oauth
-          roles-field: resource_access.kafka-ui.roles
+          roles-field: roles
     provider:
       keycloak-provider:
         authorization-uri: http://keycloak:8080/realms/application_users/protocol/openid-connect/auth
@@ -53,7 +53,7 @@ rbac:
         actions: [ view ]
 
   roles:
-    - name: "kafka-admin"
+    - name: "admin"
       clusters:
         - local
         - dev
