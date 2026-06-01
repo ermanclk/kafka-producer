@@ -1,0 +1,97 @@
+kafka:
+  clusters:
+    - name: local
+      bootstrapServers: kafka:29092
+
+auth:
+  type: OAUTH2
+  oauth2:
+    client:
+      keycloak:
+        clientId: kafka-ui
+        clientSecret: UDsqCeX5SKvLu7gV5VEn3h5iLFo47zXw
+        scope: openid,profile,email,roles
+        issuer-uri: http://keycloak:8080/realms/application_users
+        user-name-attribute: preferred_username
+        client-name: keycloak
+        provider: keycloak-provider
+        custom-params:
+          type: oauth
+          roles-field: roles
+    provider:
+      keycloak-provider:
+        authorization-uri: http://keycloak:8080/realms/application_users/protocol/openid-connect/auth
+        token-uri: http://keycloak:8080/realms/application_users/protocol/openid-connect/token
+        jwk-set-uri: http://keycloak:8080/realms/application_users/protocol/openid-connect/certs
+        user-info-uri: http://keycloak:8080/realms/application_users/protocol/openid-connect/userinfo
+        user-name-attribute: preferred_username
+rbac:
+  default-role:
+    permissions:
+      - resource: clusterconfig
+        actions: [ "view" ]
+
+      - resource: topic
+        value: ".*"
+        actions:
+          - view
+          - messages_read
+          - analysis_view
+          - messages_produce
+          - messages_dele
+
+      - resource: consumer
+        value: ".*"
+        actions: [ view ]
+
+      - resource: schema
+        value: ".*"
+        actions: [ view , edit]
+
+      - resource: connect
+        value: ".*"
+        actions: [ view ]
+
+      - resource: acl
+        actions: [ view ]
+
+  roles:
+    - name: "admins"
+      clusters:
+        - local
+        - dev
+        - staging
+        - prod
+      subjects:
+        - provider: oauth
+          type: role
+          value: "kafka-admin"
+          regex: true
+      permissions:
+        - resource: applicationconfig
+          actions: all
+
+        - resource: clusterconfig
+          actions: all
+
+        - resource: topic
+          value: ".*"
+          actions: all
+
+        - resource: consumer
+          value: ".*"
+          actions: all
+
+        - resource: schema
+          value: ".*"
+          actions: all
+
+        - resource: connect
+          value: ".*"
+          actions: all
+
+        - resource: ksql
+          actions: all
+
+        - resource: acl
+          actions: [ view ]
