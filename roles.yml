@@ -38,8 +38,7 @@ rbac:
           - messages_read
           - analysis_view
           - messages_produce
-          - messages_dele
-
+          - messages_delete
       - resource: consumer
         value: ".*"
         actions: [ view ]
