@@ -13,7 +13,7 @@ spring:
       retries: 3
       properties:
         # Apicurio Registry 3.x → /apis/registry/v3
-        apicurio.registry.url: http://localhost:8080/apis/registry/v3
+        apicurio.registry.url: http://localhost:8087/apis/registry/v3
         # Schema'yı topic adına göre register et
         apicurio.registry.auto-register: "true"
         apicurio.registry.find-latest: "true"
